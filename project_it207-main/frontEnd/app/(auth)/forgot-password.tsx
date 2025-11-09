@@ -22,7 +22,7 @@ export default function ForgotPasswordScreen() {
       return;
     }
     console.log('Forgot password for:', email);
-    router.push('/(auth)/verification-code');
+    // router.push('/(auth)/verification-code');
   };
 
   return (

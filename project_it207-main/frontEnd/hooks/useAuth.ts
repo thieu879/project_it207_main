@@ -21,7 +21,7 @@ export const useAuth = () => {
         dispatch(setAuth({ user: response.user, token: response.token }));
         return response;
       } catch (err: any) {
-        const errorMessage = err.response?.data?.message || 'Login failed';
+        const errorMessage = err.message || err.response?.data?.message || 'Đăng nhập thất bại';
         setError(errorMessage);
         throw err;
       } finally {
@@ -41,7 +41,7 @@ export const useAuth = () => {
         dispatch(setAuth({ user: response.user, token: response.token }));
         return response;
       } catch (err: any) {
-        const errorMessage = err.response?.data?.message || 'Sign up failed';
+        const errorMessage = err.message || err.response?.data?.message || 'Đăng ký thất bại';
         setError(errorMessage);
         throw err;
       } finally {

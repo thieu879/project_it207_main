@@ -17,12 +17,21 @@ import { useAuth } from '@/hooks/useAuth';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, error } = useAuth();
 
   const handleLogin = async () => {
-    if (!email || !password) return;
-    await login({ username: email, password });
-    router.replace('/');
+    if (!email.trim() || !password.trim()) {
+      alert('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+
+    try {
+      await login({ username: email, password });
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      // Error is handled by useAuth hook and displayed via error state
+      alert(err.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
+    }
   };
 
   return (
@@ -46,14 +55,13 @@ export default function LoginScreen() {
           {/* Input Fields */}
           <View style={styles.inputContainer}>
             <View style={styles.inputWrapper}>
-              <ThemedText style={styles.label}>Email address</ThemedText>
+              <ThemedText style={styles.label}>Email hoặc Username</ThemedText>
               <TextInput
                 style={styles.input}
-                placeholder="Email address"
+                placeholder="Email hoặc Username"
                 placeholderTextColor="#9BA1A6"
                 value={email}
                 onChangeText={setEmail}
-                keyboardType="email-address"
                 autoCapitalize="none"
               />
               <View style={styles.inputLine} />
@@ -80,9 +88,21 @@ export default function LoginScreen() {
             </View>
           </View>
 
+          {/* Error Message */}
+          {error && (
+            <View style={styles.errorContainer}>
+              <ThemedText style={styles.errorText}>{error}</ThemedText>
+            </View>
+          )}
+
           {/* Login Button */}
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
-            <ThemedText style={styles.loginButtonText}>{isLoading ? '...' : 'LOG IN'}</ThemedText>
+          <TouchableOpacity 
+            style={[styles.loginButton, isLoading && styles.loginButtonDisabled]} 
+            onPress={handleLogin} 
+            disabled={isLoading}>
+            <ThemedText style={styles.loginButtonText}>
+              {isLoading ? 'Đang đăng nhập...' : 'LOG IN'}
+            </ThemedText>
           </TouchableOpacity>
 
           {/* Social Login */}
@@ -184,6 +204,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 1,
+  },
+  loginButtonDisabled: {
+    opacity: 0.6,
+  },
+  errorContainer: {
+    backgroundColor: '#FFEBEE',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#C62828',
+    fontSize: 14,
+    textAlign: 'center',
   },
   socialContainer: {
     alignItems: 'center',

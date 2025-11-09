@@ -25,7 +25,7 @@ export default function SignUpScreen() {
   const handleSignUp = async () => {
     if (!name || !email || !password || password !== confirmPassword) return;
     await signUp({ username: name, email, password });
-    router.replace('/');
+    router.replace('/(tabs)');
   };
 
   return (

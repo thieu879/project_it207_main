@@ -3,13 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store';
 import {
   setCart,
-  addItem,
-  updateItem,
-  removeItem,
-  clearCart,
+  clearCart as clearCartAction,
   setLoading,
 } from '@/store/slices/cartSlice';
-import { cartService, AddToCartRequest, UpdateCartItemRequest } from '@/services/cart';
+import { cartService, CartRequest } from '@/services/cart';
 import { useAuth } from './useAuth';
 
 export const useCart = () => {
@@ -37,10 +34,10 @@ export const useCart = () => {
   }, [dispatch]);
 
   const addToCart = useCallback(
-    async (data: AddToCartRequest) => {
+    async (productId: number, quantity: number = 1) => {
       try {
         dispatch(setLoading(true));
-        const cart = await cartService.addToCart(data);
+        const cart = await cartService.addToCart(productId, quantity);
         dispatch(setCart(cart));
         return cart;
       } catch (err: any) {
@@ -54,10 +51,10 @@ export const useCart = () => {
   );
 
   const updateCartItem = useCallback(
-    async (itemId: string, data: UpdateCartItemRequest) => {
+    async (productId: number, quantity: number) => {
       try {
         dispatch(setLoading(true));
-        const cart = await cartService.updateCartItem(itemId, data);
+        const cart = await cartService.updateCartItem(productId, quantity);
         dispatch(setCart(cart));
         return cart;
       } catch (err: any) {
@@ -71,12 +68,11 @@ export const useCart = () => {
   );
 
   const removeFromCart = useCallback(
-    async (itemId: string) => {
+    async (productId: number) => {
       try {
         dispatch(setLoading(true));
-        const cart = await cartService.removeFromCart(itemId);
-        dispatch(setCart(cart));
-        return cart;
+        await cartService.removeFromCart(productId);
+        await fetchCart(); // Refresh cart
       } catch (err: any) {
         console.error('Failed to remove from cart:', err);
         throw err;
@@ -84,14 +80,14 @@ export const useCart = () => {
         dispatch(setLoading(false));
       }
     },
-    [dispatch]
+    [dispatch, fetchCart]
   );
 
   const clearCartItems = useCallback(async () => {
     try {
       dispatch(setLoading(true));
       await cartService.clearCart();
-      dispatch(clearCart());
+      dispatch(clearCartAction());
     } catch (err: any) {
       console.error('Failed to clear cart:', err);
       throw err;
