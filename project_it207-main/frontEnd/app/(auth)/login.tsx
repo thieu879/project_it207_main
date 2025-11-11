@@ -27,7 +27,7 @@ export default function LoginScreen() {
 
     try {
       await login({ username: email, password });
-      router.replace('/(tabs)/home');
+      router.replace('/(tabs)');
     } catch (err: any) {
       // Error is handled by useAuth hook and displayed via error state
       alert(err.message || 'Đăng nhập thất bại. Vui lòng thử lại.');

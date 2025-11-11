@@ -53,7 +53,7 @@ const productSlice = createSlice({
     },
     setFilters: (state, action: PayloadAction<ProductState['filters']>) => {
       state.filters = { ...state.filters, ...action.payload };
-      state.pagination.page = 1; // Reset to first page when filters change
+      state.pagination.page = 1;
     },
     setPagination: (state, action: PayloadAction<Partial<ProductState['pagination']>>) => {
       state.pagination = { ...state.pagination, ...action.payload };

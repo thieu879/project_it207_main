@@ -9,7 +9,8 @@ type APIResponse<T> = {
 };
 
 export interface WishlistItem {
-  id: number;
+  wishlistId?: number;
+  id?: number;
   product: Product;
 }
 
@@ -29,6 +30,8 @@ export const wishlistService = {
 };
 
 export default wishlistService;
+
+
 
 
 

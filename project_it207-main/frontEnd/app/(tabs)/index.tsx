@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProducts } from '@/hooks/useProducts';
 import { Product } from '@/types';
 import { Drawer } from '@/components/Drawer';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/store';
+import { setFilters } from '@/store/slices/productSlice';
 
 const { width } = Dimensions.get('window');
 
@@ -21,11 +24,15 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { products, fetchProducts, isLoading } = useProducts();
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    // Only fetch once on mount
-    fetchProducts({ page: 0, limit: 10 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      dispatch(setFilters({ search: undefined }));
+      fetchProducts({ page: 0, limit: 10, search: undefined });
+    }
   }, []);
 
   const categories = [
@@ -35,11 +42,15 @@ export default function HomeScreen() {
     { id: 4, name: 'Beauty', icon: 'sparkles', color: '#F5F5F5' },
   ];
 
-  const featuredProducts = products.slice(0, 3);
-  const recommendedProducts = products.slice(3, 5);
+  const uniqueProducts = products.filter((product, index, self) => 
+    index === self.findIndex((p) => p.id === product.id)
+  );
+  
+  const featuredProducts = uniqueProducts.slice(0, 3);
+  const recommendedProducts = uniqueProducts.slice(3, 5);
 
   const renderProductCard = (product: Product, index: number) => (
-    <TouchableOpacity key={product.id} style={styles.productCard}>
+    <TouchableOpacity key={`product-${product.id}-${index}`} style={styles.productCard}>
       <View style={styles.productImageContainer}>
         {product.imageUrl ? (
           <Image source={{ uri: product.imageUrl }} style={styles.productImage} />
@@ -77,7 +88,6 @@ export default function HomeScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <Drawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
 
-      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity onPress={() => setDrawerVisible(true)}>
           <Ionicons name="menu" size={24} color="#000000" />
@@ -95,7 +105,6 @@ export default function HomeScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
-        {/* Category Icons */}
         <View style={styles.categoriesContainer}>
           {categories.map((category) => (
             <TouchableOpacity key={category.id} style={styles.categoryItem}>
@@ -107,7 +116,6 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {/* Main Banner */}
         {renderBanner(
           'Autumn Collection 2021',
           '',
@@ -115,7 +123,6 @@ export default function HomeScreen() {
           styles.mainBanner
         )}
 
-        {/* Feature Products */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Feature Products</Text>
@@ -135,10 +142,8 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
 
-        {/* New Collection Banner */}
         {renderBanner('NEW COLLECTION', 'HANG OUT & PARTY', undefined, styles.collectionBanner)}
 
-        {/* Recommended Products */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recommended</Text>
@@ -154,10 +159,8 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
 
-        {/* Top Collection Banner */}
         {renderBanner('Sale up to 40%', 'FOR SLIM & BEAUTY', undefined, styles.collectionBanner)}
 
-        {/* Summer Collection Banner */}
         {renderBanner(
           'Summer Collection 2021',
           'Most sexy & fabulous design',
@@ -165,7 +168,6 @@ export default function HomeScreen() {
           styles.collectionBanner
         )}
 
-        {/* Product Categories */}
         <View style={styles.section}>
           <View style={styles.categoryCardRow}>
             <TouchableOpacity style={styles.categoryCard}>

@@ -73,13 +73,11 @@ export default function ProductDetailScreen() {
   const loadSimilarProducts = async () => {
     if (!selectedProduct) return;
     try {
-      // Fetch products from same category
       const response = await fetchProducts({
         page: 0,
         limit: 4,
         category: selectedProduct.category?.name,
       });
-      // Filter out current product
       const similar = response.products.filter((p) => p.id !== Number(id));
       setSimilarProducts(similar.slice(0, 3));
     } catch (error) {
@@ -146,7 +144,6 @@ export default function ProductDetailScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#000000" />
@@ -166,7 +163,6 @@ export default function ProductDetailScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Product Images */}
         <View style={styles.imageContainer}>
           {images.length > 0 ? (
             <Image source={{ uri: images[selectedImageIndex] }} style={styles.productImage} />
@@ -190,14 +186,12 @@ export default function ProductDetailScreen() {
           )}
         </View>
 
-        {/* Product Info */}
         <View style={styles.productInfo}>
           <Text style={styles.productName}>{selectedProduct.name}</Text>
           <View style={styles.priceContainer}>
             <Text style={styles.productPrice}>$ {selectedProduct.price.toFixed(2)}</Text>
           </View>
 
-          {/* Rating */}
           <View style={styles.ratingContainer}>
             <View style={styles.starsContainer}>
               {[1, 2, 3, 4, 5].map((star) => (
@@ -214,7 +208,6 @@ export default function ProductDetailScreen() {
             </Text>
           </View>
 
-          {/* Color Selection */}
           <View style={styles.selectionContainer}>
             <Text style={styles.selectionLabel}>Color</Text>
             <View style={styles.colorOptions}>
@@ -236,7 +229,6 @@ export default function ProductDetailScreen() {
             </View>
           </View>
 
-          {/* Size Selection */}
           <View style={styles.selectionContainer}>
             <Text style={styles.selectionLabel}>Size</Text>
             <View style={styles.sizeOptions}>
@@ -260,7 +252,6 @@ export default function ProductDetailScreen() {
             </View>
           </View>
 
-          {/* Description */}
           <View style={styles.descriptionContainer}>
             <Text style={styles.descriptionText}>{displayDescription}</Text>
             {descriptionText.length > 150 && (
@@ -272,7 +263,6 @@ export default function ProductDetailScreen() {
             )}
           </View>
 
-          {/* Reviews Section */}
           <View style={styles.reviewsSection}>
             <Text style={styles.sectionTitle}>Reviews</Text>
             <View style={styles.ratingSummary}>
@@ -312,7 +302,6 @@ export default function ProductDetailScreen() {
               </View>
             </View>
 
-            {/* Comments List */}
             {loadingComments ? (
               <Text style={styles.loadingText}>Loading reviews...</Text>
             ) : comments.length > 0 ? (
@@ -339,7 +328,6 @@ export default function ProductDetailScreen() {
             )}
           </View>
 
-          {/* Similar Products */}
           {similarProducts.length > 0 && (
             <View style={styles.similarProductsSection}>
               <Text style={styles.sectionTitle}>Similar Product</Text>
@@ -366,7 +354,6 @@ export default function ProductDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Bottom Bar */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 10 }]}>
         <View style={styles.quantityAndCartContainer}>
           <View style={styles.quantityControls}>

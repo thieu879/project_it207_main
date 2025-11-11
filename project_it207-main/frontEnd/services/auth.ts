@@ -80,7 +80,6 @@ export const authService = {
 
   async signUp(payload: SignUpRequest): Promise<{ user: User; token: string }> {
     await axiosInstance.post<APIResponse<unknown>>('/auth/register', payload);
-    // Auto-login after successful registration
     const { user, token } = await this.login({ username: payload.username, password: payload.password });
     return { user, token };
   },

@@ -29,7 +29,6 @@ export default function CartScreen() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    // Select all items by default
     if (items.length > 0) {
       setSelectedItems(new Set(items.map((item) => item.productId)));
     }
@@ -48,7 +47,6 @@ export default function CartScreen() {
   const handleQuantityChange = async (item: CartItem, delta: number) => {
     const newQuantity = item.quantity + delta;
     if (newQuantity <= 0) {
-      // Remove item if quantity becomes 0
       try {
         await removeFromCart(item.productId);
       } catch (error: any) {
@@ -89,7 +87,7 @@ export default function CartScreen() {
   };
 
   const subtotal = calculateSubtotal();
-  const shipping = 0; // Free shipping
+  const shipping = 0;
   const finalTotal = subtotal + shipping;
 
   const handleCheckout = () => {
@@ -150,7 +148,6 @@ export default function CartScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <View style={{ width: 24 }} />
         <Text style={styles.headerTitle}>Your Cart</Text>
@@ -158,7 +155,6 @@ export default function CartScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Cart Items */}
         {items.map((item) => {
           const isSelected = selectedItems.has(item.productId);
           return (
@@ -211,7 +207,6 @@ export default function CartScreen() {
         })}
       </ScrollView>
 
-      {/* Order Summary */}
       <View style={[styles.orderSummary, { paddingBottom: insets.bottom + 20 }]}>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Product price</Text>
@@ -228,7 +223,6 @@ export default function CartScreen() {
           <Text style={styles.summaryValueBold}>$ {finalTotal.toFixed(2)}</Text>
         </View>
 
-        {/* Checkout Button */}
         <TouchableOpacity
           style={[styles.checkoutButton, selectedItems.size === 0 && styles.checkoutButtonDisabled]}
           onPress={handleCheckout}

@@ -49,8 +49,9 @@ export default function OrderDetailScreen() {
         onPress: async () => {
           try {
             await orderService.cancelOrder(order.id);
-            Alert.alert('Success', 'Order cancelled successfully');
-            router.back();
+            Alert.alert('Success', 'Order cancelled successfully', [
+              { text: 'OK', onPress: () => router.push('/order') }
+            ]);
           } catch (error: any) {
             Alert.alert('Error', error.message || 'Failed to cancel order');
           }
@@ -99,9 +100,8 @@ export default function OrderDetailScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.push("/order")}>
           <Ionicons name="arrow-back" size={24} color="#000000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Order Details</Text>
@@ -109,7 +109,6 @@ export default function OrderDetailScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Order Info */}
         <View style={styles.orderInfoCard}>
           <View style={styles.orderInfoRow}>
             <Text style={styles.orderLabel}>Order Number</Text>
@@ -131,7 +130,6 @@ export default function OrderDetailScreen() {
           </View>
         </View>
 
-        {/* Tracking History */}
         {order.trackingHistory.length > 0 && (
           <View style={styles.trackingSection}>
             <Text style={styles.sectionTitle}>Tracking History</Text>
@@ -158,7 +156,6 @@ export default function OrderDetailScreen() {
           </View>
         )}
 
-        {/* Order Items */}
         <View style={styles.itemsSection}>
           <Text style={styles.sectionTitle}>Order Items</Text>
           {order.orderItems.map((item, index) => (
@@ -182,7 +179,6 @@ export default function OrderDetailScreen() {
           ))}
         </View>
 
-        {/* Cancel Button */}
         {canCancel && (
           <TouchableOpacity style={styles.cancelButton} onPress={handleCancelOrder}>
             <Text style={styles.cancelButtonText}>Cancel Order</Text>
@@ -351,6 +347,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+
 
 
 

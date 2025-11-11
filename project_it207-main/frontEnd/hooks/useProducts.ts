@@ -23,12 +23,21 @@ export const useProducts = () => {
       try {
         dispatch(setLoading(true));
         dispatch(setError(null));
-        const response = await productService.getAll({
-          ...filters,
-          ...params,
-          page: pagination.page,
-          limit: pagination.limit,
-        });
+        const queryParams: ProductQueryParams = params?.search !== undefined
+          ? {
+              search: params.search,
+              page: params?.page !== undefined ? params.page : 0,
+              limit: params?.limit !== undefined ? params.limit : pagination.limit,
+            }
+          : {
+              ...filters,
+              ...params,
+              search: undefined,
+              page: params?.page !== undefined ? params.page : pagination.page,
+              limit: params?.limit !== undefined ? params.limit : pagination.limit,
+            };
+        
+        const response = await productService.getAll(queryParams);
         dispatch(setProducts({ products: response.products, total: response.total }));
         dispatch(
           setPagination({
@@ -37,6 +46,11 @@ export const useProducts = () => {
             total: response.total,
           })
         );
+        if (params?.search !== undefined && params.search !== filters.search) {
+          dispatch(setFilters({ search: params.search }));
+        } else if (params?.search === undefined && filters.search) {
+          dispatch(setFilters({ search: undefined }));
+        }
         return response;
       } catch (err: any) {
         const errorMessage = err.response?.data?.message || 'Failed to fetch products';

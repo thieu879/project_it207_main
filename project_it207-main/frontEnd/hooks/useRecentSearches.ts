@@ -12,7 +12,6 @@ export function useRecentSearches(maxItems = 6) {
         const raw = await AsyncStorage.getItem(RECENT_KEY);
         if (raw) setRecent(JSON.parse(raw));
       } catch (e) {
-        // ignore errors
       }
     })();
   }, []);
@@ -26,7 +25,6 @@ export function useRecentSearches(maxItems = 6) {
         setRecent(next);
         await AsyncStorage.setItem(RECENT_KEY, JSON.stringify(next));
       } catch (e) {
-        // ignore
       }
     },
     [recent, maxItems]
@@ -37,7 +35,6 @@ export function useRecentSearches(maxItems = 6) {
       setRecent([]);
       await AsyncStorage.removeItem(RECENT_KEY);
     } catch (e) {
-      // ignore
     }
   }, []);
 

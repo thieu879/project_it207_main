@@ -2,8 +2,10 @@ package com.data.backend.controller;
 
 import com.data.backend.model.dto.APIResponse;
 import com.data.backend.model.dto.request.ProductRequest;
+import com.data.backend.model.dto.response.ProductResponse;
 import com.data.backend.model.entity.Product;
 import com.data.backend.service.product.ProductService;
+import com.data.backend.service.product.ProductServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,21 +21,27 @@ import java.io.IOException;
 public class ProductController {
     @Autowired
     private ProductService productService;
+    
+    @Autowired
+    private ProductServiceImpl productServiceImpl;
 
     @GetMapping
-    public ResponseEntity<APIResponse<Page<Product>>> getProducts(Pageable pageable) {
-        Page<Product> products = productService.findAll(pageable);
-        return new ResponseEntity<>(APIResponse.<Page<Product>>builder().success(true).message("Products fetched.").data(products).status(HttpStatus.OK).build(), HttpStatus.OK);
+    public ResponseEntity<APIResponse<Page<ProductResponse>>> getProducts(
+            Pageable pageable,
+            @RequestParam(required = false) String search) {
+        Page<ProductResponse> products = productServiceImpl.findAllAsResponse(pageable, search);
+        return new ResponseEntity<>(APIResponse.<Page<ProductResponse>>builder().success(true).message("Products fetched.").data(products).status(HttpStatus.OK).build(), HttpStatus.OK);
     }
     @GetMapping("/{id}")
-    public ResponseEntity<APIResponse<Product>> getProductDetails(@PathVariable Long id) {
-        Product product = productService.findById(id);
-        return new ResponseEntity<>(APIResponse.<Product>builder().success(true).message("Product details fetched.").data(product).status(HttpStatus.OK).build(), HttpStatus.OK);
+    public ResponseEntity<APIResponse<ProductResponse>> getProductDetails(@PathVariable Long id) {
+        ProductResponse product = productServiceImpl.findByIdAsResponse(id);
+        return new ResponseEntity<>(APIResponse.<ProductResponse>builder().success(true).message("Product details fetched.").data(product).status(HttpStatus.OK).build(), HttpStatus.OK);
     }
     @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<APIResponse<Product>> createProduct(@Valid @RequestPart("product") ProductRequest productRequest, @RequestPart("image") MultipartFile imageFile) throws IOException {
+    public ResponseEntity<APIResponse<ProductResponse>> createProduct(@Valid @RequestPart("product") ProductRequest productRequest, @RequestPart("image") MultipartFile imageFile) throws IOException {
         Product savedProduct = productService.save(productRequest, imageFile);
-        return new ResponseEntity<>(APIResponse.<Product>builder().success(true).message("Product created.").data(savedProduct).status(HttpStatus.CREATED).build(), HttpStatus.CREATED);
+        ProductResponse productResponse = productServiceImpl.toProductResponse(savedProduct);
+        return new ResponseEntity<>(APIResponse.<ProductResponse>builder().success(true).message("Product created.").data(productResponse).status(HttpStatus.CREATED).build(), HttpStatus.CREATED);
     }
 }

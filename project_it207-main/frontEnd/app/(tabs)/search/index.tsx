@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,54 +8,29 @@ import {
   StatusBar,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { Input } from "@/components/ui/Input";
 import { router } from "expo-router";
 import { useRecentSearches } from "@/hooks/useRecentSearches";
 
 const { width } = Dimensions.get("window");
-const RECENT_KEY = "@recent_searches";
 
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
-  // search screen only captures query and recent items; results are on the results page
 
   const [query, setQuery] = useState("");
   const { recent, saveRecent, clearRecent } = useRecentSearches();
-  const debounceRef = useRef<any>(null);
-
-  useEffect(() => {
-    // load recent searches
-    (async () => {
-      try {
-        // Removed AsyncStorage logic, now handled by useRecentSearches hook
-      } catch (err) {
-        // ignore
-      }
-    })();
-  }, []);
 
   const onSubmit = async (text?: string) => {
     const q = (text ?? query).trim();
     if (!q) return;
-    await saveRecent(q); // Now using the hook's saveRecent
-    // navigate to searchResult page with query param
+    await saveRecent(q);
     router.push(`/search/searchResult?query=${encodeURIComponent(q)}`);
   };
 
   const onChangeText = (text: string) => {
     setQuery(text);
-    // debounce
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      onSubmit(text);
-    }, 450);
   };
-
-  // clearRecent now comes from hook
-
-  // product rendering moved to searchResult.tsx
 
   return (
     <View style={styles.container}>
@@ -76,7 +51,6 @@ export default function SearchScreen() {
           onSubmitEditing={() => onSubmit()}
         />
 
-        {/* Recent searches */}
         {recent.length > 0 && (
           <View style={styles.recentSection}>
             <View style={styles.recentHeader}>

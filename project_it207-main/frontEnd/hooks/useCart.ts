@@ -14,7 +14,6 @@ export const useCart = () => {
   const { items, total, isLoading } = useSelector((state: RootState) => state.cart);
   const { isAuthenticated } = useAuth();
 
-  // Fetch cart on mount if authenticated
   useEffect(() => {
     if (isAuthenticated) {
       fetchCart();
@@ -72,7 +71,7 @@ export const useCart = () => {
       try {
         dispatch(setLoading(true));
         await cartService.removeFromCart(productId);
-        await fetchCart(); // Refresh cart
+        await fetchCart();
       } catch (err: any) {
         console.error('Failed to remove from cart:', err);
         throw err;

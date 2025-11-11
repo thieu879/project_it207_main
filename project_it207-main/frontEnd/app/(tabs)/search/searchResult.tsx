@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useProducts } from "@/hooks/useProducts";
 import { Product } from "@/types";
 import { ProductCard } from "@/components/ui/ProductCard";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store";
+import { setProducts } from "@/store/slices/productSlice";
 
 const { width } = Dimensions.get("window");
 
@@ -23,17 +26,31 @@ export default function SearchResultScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
   const q = typeof params.query === "string" ? params.query : "";
+  const dispatch = useDispatch<AppDispatch>();
+  const prevQueryRef = useRef<string>("");
 
   const { products, fetchProducts, isLoading } = useProducts();
 
   useEffect(() => {
+    if (q === prevQueryRef.current) {
+      return;
+    }
+    
+    prevQueryRef.current = q;
+
     (async () => {
-      if (!q) return;
+      if (!q) {
+        dispatch(setProducts({ products: [], total: 0 }));
+        return;
+      }
       try {
+        dispatch(setProducts({ products: [], total: 0 }));
         await fetchProducts({ search: q, page: 0, limit: 30 });
-      } catch {}
+      } catch (error) {
+        console.error('Error fetching search results:', error);
+      }
     })();
-  }, [q, fetchProducts]);
+  }, [q]);
 
   const renderProductCard = ({ item }: { item: Product }) => (
     <ProductCard

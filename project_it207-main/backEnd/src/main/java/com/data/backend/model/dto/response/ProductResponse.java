@@ -12,7 +12,8 @@ public class ProductResponse {
     private String description;
     private Double price;
     private Integer quantity;
-    private String categoryName;
+    private CategoryResponse category;
     private String imageUrl;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

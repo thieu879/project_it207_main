@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TextInput,
   StatusBar,
   Alert,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,24 +16,55 @@ import { router } from 'expo-router';
 import { useCart } from '@/hooks/useCart';
 import { orderService } from '@/services/order';
 import { useAuth } from '@/hooks/useAuth';
+import { addressService } from '@/services/address';
 
 export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
   const { items, total, isLoading, fetchCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [shippingMethod, setShippingMethod] = useState('free');
+  const [paymentMethod, setPaymentMethod] = useState<'app' | 'cod'>('cod');
   const [couponCode, setCouponCode] = useState('');
   const [copyBillingAddress, setCopyBillingAddress] = useState(false);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [country, setCountry] = useState('');
-  const [streetName, setStreetName] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [zipCode, setZipCode] = useState('');
+  const [address, setAddress] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [addresses, setAddresses] = useState<any[]>([]);
+
+  // Load user data and addresses
+  useEffect(() => {
+    if (user) {
+      setFirstName(user.firstName || '');
+      setLastName(user.lastName || '');
+      setPhoneNumber(user.phone || '');
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadAddresses();
+    }
+  }, [isAuthenticated]);
+
+  const loadAddresses = async () => {
+    try {
+      const data = await addressService.getAddresses();
+      setAddresses(data);
+      const defaultAddress = data.find((addr) => addr.isDefault) || data[0];
+      if (defaultAddress) {
+        setSelectedAddressId(defaultAddress.id);
+        setAddress(defaultAddress.fullAddress);
+        setCountry(defaultAddress.addressType === 'office' ? 'Office' : 'Home');
+      }
+    } catch (error) {
+      console.error('Failed to load addresses:', error);
+    }
+  };
 
   const shippingMethods = [
     {
@@ -56,7 +88,7 @@ export default function CheckoutScreen() {
   ];
 
   const handleContinueToPayment = () => {
-    if (!firstName || !lastName || !country || !streetName || !city || !zipCode || !phoneNumber) {
+    if (!firstName || !lastName || !country || !address || !phoneNumber) {
       Alert.alert('Validation Error', 'Please fill in all required fields');
       return;
     }
@@ -70,10 +102,15 @@ export default function CheckoutScreen() {
       return;
     }
 
+    if (paymentMethod === 'app') {
+      Alert.alert('Coming Soon', 'Payment via app feature will be available soon');
+      return;
+    }
+
     try {
       Alert.alert(
         'Confirm Order',
-        `Total: $${(total + (shippingMethods.find((m) => m.id === shippingMethod)?.price || 0)).toFixed(2)}`,
+        `Total: $${finalTotal.toFixed(2)}\n\nPayment Method: ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'Payment via App'}`,
         [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -82,7 +119,7 @@ export default function CheckoutScreen() {
               try {
                 await orderService.createOrder();
                 await fetchCart();
-                router.push('/order-completed');
+                router.push('/');
               } catch (error: any) {
                 Alert.alert('Error', error.message || 'Failed to create order');
               }
@@ -225,47 +262,15 @@ export default function CheckoutScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Street name *</Text>
+                <Text style={styles.label}>Address *</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Street name"
-                  value={streetName}
-                  onChangeText={setStreetName}
+                  placeholder="Enter your full address"
+                  value={address}
+                  onChangeText={setAddress}
                   placeholderTextColor="#9BA1A6"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>City *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="City"
-                  value={city}
-                  onChangeText={setCity}
-                  placeholderTextColor="#9BA1A6"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>State / Province</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="State / Province"
-                  value={state}
-                  onChangeText={setState}
-                  placeholderTextColor="#9BA1A6"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Zip-code *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Zip-code"
-                  value={zipCode}
-                  onChangeText={setZipCode}
-                  keyboardType="numeric"
-                  placeholderTextColor="#9BA1A6"
+                  multiline
+                  numberOfLines={3}
                 />
               </View>
 
@@ -346,8 +351,65 @@ export default function CheckoutScreen() {
               <Text style={styles.sectionNumber}>STEP 2</Text>
               <Text style={styles.sectionTitle}>Payment</Text>
             </View>
-            <View style={styles.paymentSection}>
-              <Text style={styles.paymentText}>Payment methods will be implemented here</Text>
+            
+            <View style={styles.paymentMethodSection}>
+              <Text style={styles.sectionTitle}>Payment Method</Text>
+              
+              <TouchableOpacity
+                style={styles.paymentMethodOption}
+                onPress={() => setPaymentMethod('cod')}>
+                <View
+                  style={[
+                    styles.radioButton,
+                    paymentMethod === 'cod' && styles.radioButtonSelected,
+                  ]}>
+                  {paymentMethod === 'cod' && (
+                    <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                  )}
+                </View>
+                <View style={styles.paymentMethodInfo}>
+                  <Ionicons name="cash-outline" size={24} color="#2C1810" />
+                  <View style={styles.paymentMethodTextContainer}>
+                    <Text style={styles.paymentMethodName}>Cash on Delivery</Text>
+                    <Text style={styles.paymentMethodDescription}>
+                      Pay when you receive the order
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.paymentMethodOption}
+                onPress={() => {
+                  setPaymentMethod('app');
+                  Alert.alert('Coming Soon', 'Payment via app feature will be available soon');
+                }}>
+                <View
+                  style={[
+                    styles.radioButton,
+                    paymentMethod === 'app' && styles.radioButtonSelected,
+                  ]}>
+                  {paymentMethod === 'app' && (
+                    <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                  )}
+                </View>
+                <View style={styles.paymentMethodInfo}>
+                  <Ionicons name="card-outline" size={24} color="#2C1810" />
+                  <View style={styles.paymentMethodTextContainer}>
+                    <Text style={styles.paymentMethodName}>Payment via App</Text>
+                    <Text style={styles.paymentMethodDescription}>
+                      Pay securely through the app
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+
+              {paymentMethod === 'app' && (
+                <View style={styles.comingSoonBanner}>
+                  <Ionicons name="information-circle-outline" size={20} color="#FFA500" />
+                  <Text style={styles.comingSoonText}>Coming Soon</Text>
+                </View>
+              )}
             </View>
           </View>
         )}
@@ -358,8 +420,86 @@ export default function CheckoutScreen() {
               <Text style={styles.sectionNumber}>STEP 3</Text>
               <Text style={styles.sectionTitle}>Review</Text>
             </View>
+
             <View style={styles.reviewSection}>
-              <Text style={styles.reviewText}>Order summary will be displayed here</Text>
+              <Text style={styles.reviewSectionTitle}>Order Items</Text>
+              {items.map((item) => (
+                <View key={item.productId} style={styles.reviewItem}>
+                  {item.imageUrl ? (
+                    <Image source={{ uri: item.imageUrl }} style={styles.reviewItemImage} />
+                  ) : (
+                    <View style={[styles.reviewItemImage, styles.placeholderImage]}>
+                      <Ionicons name="image-outline" size={24} color="#9BA1A6" />
+                    </View>
+                  )}
+                  <View style={styles.reviewItemInfo}>
+                    <Text style={styles.reviewItemName}>{item.productName}</Text>
+                    <Text style={styles.reviewItemQuantity}>Quantity: {item.quantity}</Text>
+                  </View>
+                  <Text style={styles.reviewItemPrice}>
+                    ${(item.price * item.quantity).toFixed(2)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.reviewSection}>
+              <Text style={styles.reviewSectionTitle}>Shipping Information</Text>
+              <View style={styles.reviewInfoRow}>
+                <Text style={styles.reviewInfoLabel}>Name:</Text>
+                <Text style={styles.reviewInfoValue}>
+                  {firstName} {lastName}
+                </Text>
+              </View>
+              <View style={styles.reviewInfoRow}>
+                <Text style={styles.reviewInfoLabel}>Phone:</Text>
+                <Text style={styles.reviewInfoValue}>{phoneNumber}</Text>
+              </View>
+              <View style={styles.reviewInfoRow}>
+                <Text style={styles.reviewInfoLabel}>Address:</Text>
+                <Text style={styles.reviewInfoValue}>{address}</Text>
+              </View>
+              <View style={styles.reviewInfoRow}>
+                <Text style={styles.reviewInfoLabel}>Country:</Text>
+                <Text style={styles.reviewInfoValue}>{country}</Text>
+              </View>
+            </View>
+
+            <View style={styles.reviewSection}>
+              <Text style={styles.reviewSectionTitle}>Payment Information</Text>
+              <View style={styles.reviewInfoRow}>
+                <Text style={styles.reviewInfoLabel}>Payment Method:</Text>
+                <Text style={styles.reviewInfoValue}>
+                  {paymentMethod === 'cod' ? 'Cash on Delivery' : 'Payment via App'}
+                </Text>
+              </View>
+              <View style={styles.reviewInfoRow}>
+                <Text style={styles.reviewInfoLabel}>Shipping Method:</Text>
+                <Text style={styles.reviewInfoValue}>
+                  {shippingMethods.find((m) => m.id === shippingMethod)?.name || 'Free Delivery'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.reviewSection}>
+              <Text style={styles.reviewSectionTitle}>Order Summary</Text>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Subtotal:</Text>
+                <Text style={styles.summaryValue}>${total.toFixed(2)}</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Shipping:</Text>
+                <Text style={styles.summaryValue}>
+                  ${(shippingMethods.find((m) => m.id === shippingMethod)?.price || 0).toFixed(2)}
+                </Text>
+              </View>
+              <View style={styles.summaryDivider} />
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabelBold}>Total:</Text>
+                <Text style={styles.summaryValueBold}>
+                  ${finalTotal.toFixed(2)}
+                </Text>
+              </View>
             </View>
           </View>
         )}
@@ -524,6 +664,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000000',
     backgroundColor: '#FFFFFF',
+    textAlignVertical: 'top',
   },
   inputError: {
     borderColor: '#FF3B30',
@@ -646,16 +787,143 @@ const styles = StyleSheet.create({
     color: '#9BA1A6',
     textAlign: 'center',
   },
+  paymentMethodSection: {
+    marginBottom: 30,
+  },
+  paymentMethodOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  paymentMethodInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 15,
+    gap: 12,
+  },
+  paymentMethodTextContainer: {
+    flex: 1,
+  },
+  paymentMethodName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  paymentMethodDescription: {
+    fontSize: 14,
+    color: '#9BA1A6',
+  },
+  comingSoonBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF3CD',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 10,
+    gap: 8,
+  },
+  comingSoonText: {
+    fontSize: 14,
+    color: '#FFA500',
+    fontWeight: '500',
+  },
   reviewSection: {
     padding: 20,
     backgroundColor: '#F5F5F5',
     borderRadius: 8,
     marginBottom: 20,
   },
-  reviewText: {
+  reviewSectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 15,
+  },
+  reviewItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  reviewItemImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    marginRight: 12,
+  },
+  placeholderImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reviewItemInfo: {
+    flex: 1,
+  },
+  reviewItemName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  reviewItemQuantity: {
+    fontSize: 12,
+    color: '#9BA1A6',
+  },
+  reviewItemPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2C1810',
+  },
+  reviewInfoRow: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  reviewInfoLabel: {
     fontSize: 14,
     color: '#9BA1A6',
-    textAlign: 'center',
+    width: 100,
+  },
+  reviewInfoValue: {
+    fontSize: 14,
+    color: '#000000',
+    flex: 1,
+    fontWeight: '500',
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: '#9BA1A6',
+  },
+  summaryLabelBold: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  summaryValue: {
+    fontSize: 14,
+    color: '#9BA1A6',
+  },
+  summaryValueBold: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2C1810',
+  },
+  summaryDivider: {
+    height: 1,
+    backgroundColor: '#E5E5E5',
+    marginVertical: 10,
   },
   bottomBar: {
     backgroundColor: '#FFFFFF',
@@ -679,6 +947,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+
 
 
 

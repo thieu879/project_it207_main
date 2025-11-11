@@ -21,6 +21,14 @@ export interface OrderTracking {
   location?: string;
 }
 
+export interface OrderItem {
+  productId: number;
+  productName: string;
+  quantity: number;
+  price: number;
+  imageUrl?: string;
+}
+
 export interface OrderDetail {
   id: number;
   username: string;
@@ -29,6 +37,8 @@ export interface OrderDetail {
   orderItems: OrderItem[];
   trackingHistory: OrderTracking[];
 }
+
+export type OrderStatus = 'PENDING' | 'DELIVERED' | 'CANCELLED' | 'PROCESSING' | 'SHIPPED';
 
 export const orderService = {
   async createOrder(): Promise<OrderDetail> {
@@ -52,6 +62,8 @@ export const orderService = {
 };
 
 export default orderService;
+
+
 
 
 
