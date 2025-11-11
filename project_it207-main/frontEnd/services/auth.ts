@@ -26,13 +26,18 @@ type JWTResponse = {
   email: string;
   enabled: boolean;
   isActive: boolean;
-  authorities: Array<{ authority: string }>; // Spring format
+  authorities: Array<{ authority: string }>;
 };
 
 type UserResponse = {
   id: number;
   username: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  gender?: string;
+  imageUrl?: string;
   isActive: boolean;
   roles: string[];
 };
@@ -42,6 +47,11 @@ function mapUserResponseToUser(u: UserResponse): User {
     id: u.id,
     username: u.username,
     email: u.email,
+    firstName: u.firstName,
+    lastName: u.lastName,
+    phone: u.phone,
+    gender: u.gender,
+    imageUrl: u.imageUrl,
     password: '',
     isActive: u.isActive,
     roles: (u.roles || []).map((r, idx) => ({ id: idx + 1, roleName: r as any })),
@@ -76,7 +86,6 @@ export const authService = {
   },
 
   async logout(): Promise<void> {
-    // If there's a server-side logout, call it here.
     return Promise.resolve();
   },
 };

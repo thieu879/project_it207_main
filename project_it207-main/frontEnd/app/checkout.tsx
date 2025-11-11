@@ -20,12 +20,11 @@ export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
   const { items, total, isLoading, fetchCart } = useCart();
   const { isAuthenticated } = useAuth();
-  const [currentStep, setCurrentStep] = useState(1); // 1: Shipping, 2: Payment, 3: Review
+  const [currentStep, setCurrentStep] = useState(1);
   const [shippingMethod, setShippingMethod] = useState('free');
   const [couponCode, setCouponCode] = useState('');
   const [copyBillingAddress, setCopyBillingAddress] = useState(false);
 
-  // Shipping form fields
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [country, setCountry] = useState('');
@@ -57,7 +56,6 @@ export default function CheckoutScreen() {
   ];
 
   const handleContinueToPayment = () => {
-    // Validate shipping form
     if (!firstName || !lastName || !country || !streetName || !city || !zipCode || !phoneNumber) {
       Alert.alert('Validation Error', 'Please fill in all required fields');
       return;
@@ -83,7 +81,7 @@ export default function CheckoutScreen() {
             onPress: async () => {
               try {
                 await orderService.createOrder();
-                await fetchCart(); // Clear cart after order
+                await fetchCart();
                 router.push('/order-completed');
               } catch (error: any) {
                 Alert.alert('Error', error.message || 'Failed to create order');
@@ -135,7 +133,6 @@ export default function CheckoutScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#000000" />
@@ -144,7 +141,6 @@ export default function CheckoutScreen() {
         <View style={{ width: 24 }} />
       </View>
 
-      {/* Progress Indicator */}
       <View style={styles.progressContainer}>
         <View style={styles.progressStep}>
           <View style={[styles.progressIcon, currentStep >= 1 && styles.progressIconActive]}>
@@ -183,7 +179,6 @@ export default function CheckoutScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Step 1: Shipping */}
         {currentStep === 1 && (
           <View>
             <View style={styles.sectionHeader}>
@@ -191,7 +186,6 @@ export default function CheckoutScreen() {
               <Text style={styles.sectionTitle}>Shipping</Text>
             </View>
 
-            {/* Shipping Address Form */}
             <View style={styles.form}>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>First name *</Text>
@@ -288,7 +282,6 @@ export default function CheckoutScreen() {
               </View>
             </View>
 
-            {/* Shipping Method */}
             <View style={styles.shippingMethodSection}>
               <Text style={styles.sectionTitle}>Shipping method</Text>
               {shippingMethods.map((method) => (
@@ -313,7 +306,6 @@ export default function CheckoutScreen() {
               ))}
             </View>
 
-            {/* Coupon Code */}
             <View style={styles.couponSection}>
               <Text style={styles.sectionTitle}>Coupon Code</Text>
               <View style={styles.couponInputContainer}>
@@ -330,7 +322,6 @@ export default function CheckoutScreen() {
               </View>
             </View>
 
-            {/* Billing Address */}
             <View style={styles.billingSection}>
               <Text style={styles.sectionTitle}>Billing Address</Text>
               <TouchableOpacity
@@ -349,7 +340,6 @@ export default function CheckoutScreen() {
           </View>
         )}
 
-        {/* Step 2: Payment */}
         {currentStep === 2 && (
           <View>
             <View style={styles.sectionHeader}>
@@ -362,7 +352,6 @@ export default function CheckoutScreen() {
           </View>
         )}
 
-        {/* Step 3: Review */}
         {currentStep === 3 && (
           <View>
             <View style={styles.sectionHeader}>
@@ -376,7 +365,6 @@ export default function CheckoutScreen() {
         )}
       </ScrollView>
 
-      {/* Bottom Button */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 20 }]}>
         {currentStep === 1 && (
           <TouchableOpacity style={styles.continueButton} onPress={handleContinueToPayment}>
@@ -691,4 +679,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+
 

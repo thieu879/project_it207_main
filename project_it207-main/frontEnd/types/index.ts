@@ -33,6 +33,10 @@ export interface User {
   username: string;
   password: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  gender?: string;
   roles: Role[];
   orders?: Order[];
   cart?: Cart;
@@ -40,6 +44,7 @@ export interface User {
   comments?: Comment[];
   wishlists?: Wishlist[];
   isActive: boolean;
+  imageUrl?: string;
 }
 
 export interface Cart {
